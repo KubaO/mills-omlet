@@ -21,10 +21,107 @@
 #define TP 1
 #define PF "cp%02d_%.3f"
 
-// network selection
+/*
+ * The network to use
+ */
 
-#define Drnn        // recurrent neural network
-#define Done_layer  // just a single layer
+#define lstm2
+
+/*
+ * Predefined neural networks
+ */
+
+  // linear network
+#ifdef lin1
+#define Dlin
+#define Done_layer
+#endif
+
+  // perceptron
+#ifdef per1
+#define Dper
+#define Done_layer
+#endif
+
+  // recurrent neural networks
+#ifdef rnn1
+#define Drnn
+#define Done_layer
+#endif
+
+#ifdef rnn2
+#define Drnn
+#define Dtwo_layer
+#endif
+
+#ifdef rnn3
+#define Drnn
+#define Dthree_layer
+#endif
+
+  // long short term memory
+#ifdef lstm1
+#define Dlstm
+#define Done_layer
+#endif
+
+#ifdef lstm2
+#define Dlstm
+#define Dtwo_layer
+#endif
+
+#ifdef lstm3
+#define Dlstm
+#define Dthree_layer
+#endif
+
+  // lstm with passthrough
+#ifdef lstmp1
+#define Dlstmp
+#define Done_layer
+#endif
+
+#ifdef lstmp2
+#define Dlstmp
+#define Dtwo_layer
+#endif
+
+#ifdef lstmp3
+#define Dlstmp
+#define Dthree_layer
+#endif
+
+  // recurrent lstm
+#ifdef rlstm1
+#define Drlstm
+#define Done_layer
+#endif
+
+#ifdef rlstm2
+#define Drlstm
+#define Dtwo_layer
+#endif
+
+#ifdef rlstm3
+#define Drlstm
+#define Dthree_layer
+#endif
+
+  // gated recurrent unit
+#ifdef gru1
+#define Dgru
+#define Done_layer
+#endif
+
+#ifdef gru2
+#define Dgru
+#define Dtwo_layer
+#endif
+
+#ifdef gru3
+#define Dgru
+#define Dthree_layer
+#endif
 
 /* Networks
  *
@@ -32,6 +129,16 @@
  * order.  This allows checkpoint files to be portable beetween
  * different compilers.
  */
+
+// linear network
+#ifdef Dlin
+#define BK y=x
+#endif
+
+// perceptron
+#ifdef Dper
+#define BK y=T(x)
+#endif
 
 // recurrent neural network
 #ifdef Drnn
@@ -43,6 +150,90 @@
    y  = h
 #endif
 
+// long short term memory
+#ifdef Dlstm
+#define HS 128
+#define BK                         \
+    cp = I(HS),                    \
+    hp = I(HS),                    \
+    t1 = L(HS, x),                 \
+    f = S(A(t1, L(HS, hp))),       \
+    t2 = L(HS, x),                 \
+    i = S(A(t2, L(HS, hp))),       \
+    t3 = L(HS, x),                 \
+    cn = T(A(t3, L(HS, hp))),      \
+    t4 = M(f, cp),                 \
+    c = C(cp, A(t4, M(i, cn))),    \
+    t5 = L(HS, x),                 \
+    o = S(A(t5, L(HS, hp))),       \
+    h = C(hp, M(o, T(c))),         \
+    y = h
+#endif
+
+// lstm with passthrough
+#ifdef Dlstmp
+#define HS 128
+#define BK                      \
+    cp = I(HS),                 \
+    hp = I(HS),                 \
+    t1 = L(HS, x),              \
+    t2 = A(t1, L(HS, hp)),      \
+    f = S(A(CM(cp), t2)),       \
+    t3 = L(HS, x),              \
+    t4 = A(t3, L(HS, hp)),      \
+    i = S(A(CM(cp), t4)),       \
+    t5 = L(HS, x),              \
+    cn = T(A(t5, L(HS, hp))),   \
+    t6 = M(f, cp),              \
+    c = C(cp, A(t6, M(i, cn))), \
+    t7 = L(HS, x),              \
+    t8 = A(t7, L(HS, hp)),      \
+    o = S(A(CM(c), t8)),        \
+    h = C(hp, M(o, T(c))),      \
+    y = h
+#endif
+
+// residual lstm
+#ifdef Drlstm
+#define HS 128
+#define BK                           \
+    cp = I(HS),                      \
+    hp = I(HS),                      \
+    t1 = L(HS, x),                   \
+    t2 = A(t1, L(HS, hp)),           \
+    f = S(A(CM(cp), t2)),            \
+    t3 = L(HS, x),                   \
+    t4 = A(t3, L(HS, hp)),           \
+    i = S(A(CM(cp), t4)),            \
+    t5 = L(HS, x),                   \
+    cn = T(A(t5, L(HS, hp))),        \
+    t6 = M(f, cp),                   \
+    c = C(cp, A(t6, M(i, cn))),      \
+    t7 = L(HS, x),                   \
+    t8 = A(t7, L(HS, hp)),           \
+    o = S(A(CM(c), t8)),             \
+    m = L(HS, T(c)),                 \
+    h = C(hp, M(o, A(m, L(HS, x)))), \
+    y = h
+#endif
+
+// gated recurrent unit
+#ifdef Dgru
+#define HS 128
+#define BK                          \
+    hp = I(HS),                     \
+    t1 = L(HS, x),                  \
+    z = S(A(t1, L(HS, hp))),        \
+    t2 = L(HS, x),                  \
+    r = S(A(t2, L(HS, hp))),        \
+    t3 = L(HS, x),                  \
+    c = T(A(t3, L(HS, M(r, hp)))),  \
+    zc = OG(1, -1, z),              \
+    t4 = M(zc, hp),                 \
+    h = C(hp, A(t4, M(z, c))),      \
+    y = h
+#endif
+
 // single-layer network
 #ifdef Done_layer
 #define NW           \
@@ -50,7 +241,23 @@
    y   = L(n, MD(x))
 #endif
 
-/*#pragma _Atomic int*/
+// two-layer network
+#ifdef Dtwo_layer
+#define NW              \
+    x = I(n),           \
+    y = L(n, MD(MD(x)))
+#endif
+
+// three - layer network
+#ifdef Dthree_layer
+#define NW                  \
+    x = I(n),               \
+    y = L(n, MD(MD(MD(x))))
+#endif
+
+/*
+ * The Code :)
+ */
 
 struct {
   int o, s;
