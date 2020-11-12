@@ -6,7 +6,7 @@
 // hyperparameters
 
 #define RS .15
-#define TR .95
+#define TR .90
 #define LR .002
 #define LD .97
 #define LE 10
@@ -481,7 +481,7 @@ int main(int argc, char **argv) {
       }
     }
   }
-  o &&fread(&k, sizeof k, 1, o);
+  o && fread(&k, sizeof k, 1, o);
   n = k.k;
   {
     V NW;
